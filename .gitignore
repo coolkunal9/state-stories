@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+client/node_modules/
+
+# Secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+server/.env
+client/.env
+
+# Build output (Vercel builds this on deploy)
+client/build/
+
+# Logs & OS
+npm-debug.log*
+.DS_Store
+Thumbs.db
+*.log
+
+# Local archives
+client.zip
+*.zip
+
+# Editor / cache
+.idea/
+.vscode/
+client/node_modules/.cache/

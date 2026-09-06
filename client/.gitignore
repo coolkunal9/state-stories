@@ -1,0 +1,5 @@
+# See root .gitignore — kept for CRA tooling
+node_modules/
+build/
+.env
+.env.local
