@@ -4,10 +4,16 @@ const Comment = require("../models/Comment");
 /**
  * Get all articles with optional pagination, state filtering, and search query.
  */
+const MAX_LIMIT = 50;
+
 const getArticles = async ({ page = 1, limit = 12, state, search } = {}) => {
     const filter = {};
+
     if (state) {
-        filter.state = { $regex: new RegExp(`^${state}$`, "i") };
+        // Security: escape regex special characters before interpolating user input.
+        // This prevents ReDoS and regex injection attacks via the ?state= query param.
+        const escapedState = state.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        filter.state = { $regex: new RegExp(`^${escapedState}$`, "i") };
     }
 
     if (search && search.trim().length >= 2) {
@@ -16,14 +22,17 @@ const getArticles = async ({ page = 1, limit = 12, state, search } = {}) => {
         filter.$text = { $search: term };
     }
 
-    const skip = (page - 1) * limit;
+    // Sanitise pagination params: coerce to integers, enforce safe bounds.
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(MAX_LIMIT, Math.max(1, parseInt(limit, 10) || 12));
+    const skip = (pageNum - 1) * limitNum;
 
     const [articles, total] = await Promise.all([
         Article.find(filter)
             .select("-comments") // Exclude embedded comments from list view
             .sort({ createdAt: -1 })
             .skip(skip)
-            .limit(limit)
+            .limit(limitNum)
             .lean(),
         Article.countDocuments(filter),
     ]);
@@ -31,10 +40,10 @@ const getArticles = async ({ page = 1, limit = 12, state, search } = {}) => {
     return {
         articles,
         pagination: {
-            page: Number(page),
-            limit: Number(limit),
+            page: pageNum,
+            limit: limitNum,
             total,
-            pages: Math.ceil(total / limit),
+            pages: Math.ceil(total / limitNum),
         },
     };
 };

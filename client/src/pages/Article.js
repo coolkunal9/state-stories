@@ -96,7 +96,7 @@ const Article = () => {
         <div className="absolute inset-0">
           <img
             src={article.image}
-            alt=""
+            alt={article.title || "Story header image"}
             className="w-full h-full object-cover opacity-65"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/50 to-primary/20" />

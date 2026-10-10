@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const authService = require("../services/authService");
 const { validate, registerSchema, loginSchema } = require("../middleware/validate");
+const { authenticate } = require("../middleware/auth");
 
 /**
  * POST /api/auth/register
@@ -39,7 +40,6 @@ router.post("/login", validate(loginSchema), async (req, res, next) => {
     }
 });
 
-const { authenticate } = require("../middleware/auth");
 
 /**
  * GET /api/auth/me

@@ -134,26 +134,54 @@ const articles = [
 ];
 
 const seed = async () => {
+    // Safety guard: refuse to run destructively against production MongoDB
+    // unless the operator explicitly passes --force as a CLI argument.
+    const isProduction = process.env.NODE_ENV === "production";
+    const forceFlag = process.argv.includes("--force");
+
+    if (isProduction && !forceFlag) {
+        console.error(
+            "ERROR: This seed script detected NODE_ENV=production.\n" +
+            "Running it would upsert articles into your production database.\n" +
+            "If you genuinely intend this, rerun with: node seed.js --force\n" +
+            "Exiting without making any changes."
+        );
+        process.exit(1);
+    }
+
     try {
         console.log("Connecting to MongoDB...");
         await connectDB();
-        console.log("Connected!");
+        console.log("Connected!\n");
 
-        await Article.deleteMany({});
-        console.log("Old articles cleared.");
+        // Use bulkWrite with upsert so this script is safe to run multiple times.
+        // Existing articles are updated; new articles are inserted.
+        // No data is deleted — comments and other documents are untouched.
+        const ops = articles.map((article) => ({
+            updateOne: {
+                filter: { name: article.name },   // match by unique URL slug
+                update: { $set: article },
+                upsert: true,                       // insert if not found
+            },
+        }));
 
-        const inserted = await Article.insertMany(articles);
-        console.log(`Seeded ${inserted.length} articles successfully!\n`);
+        const result = await Article.bulkWrite(ops);
+        console.log(
+            `Seed complete: ${result.upsertedCount} inserted, ${result.modifiedCount} updated.\n`
+        );
 
         console.log("Verifying image2 fields:");
-        inserted.forEach(a => {
+        const seeded = await require("../models/Article").find(
+            { name: { $in: articles.map((a) => a.name) } }
+        ).lean();
+        seeded.forEach((a) => {
             const status = a.image2 ? "OK" : "MISSING";
             console.log(`  [${status}] ${a.name}: ${a.image2}`);
         });
 
-        console.log("\nDone! Now restart your server: nodemon server.js");
+        console.log("\nDone! Restart your server if it is running.");
     } catch (err) {
-        console.error("Error:", err.message);
+        console.error("Seed error:", err.message);
     } finally {
         await mongoose.disconnect();
         process.exit(0);

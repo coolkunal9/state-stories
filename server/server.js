@@ -30,6 +30,21 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
+// Stricter rate limit for authentication endpoints to slow brute-force attacks.
+// 10 attempts per 15-minute window per IP is still generous for legitimate use.
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        message: "Too many login attempts from this IP, please try again after 15 minutes."
+    }
+});
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", authLimiter);
+
 // CORS — set CLIENT_URL to your live frontend (e.g. https://your-app.vercel.app)
 const allowedOrigins = [
     "http://localhost:3000",
@@ -41,21 +56,21 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: function (origin, callback) {
+        // Allow server-to-server / curl requests (no Origin header)
         if (!origin) return callback(null, true);
 
+        // Localhost always allowed in development
         if (process.env.NODE_ENV !== "production" && origin.startsWith("http://localhost")) {
             return callback(null, true);
         }
 
+        // Exact-origin allowlist check (covers CLIENT_URL and FRONTEND_URL)
         if (allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
 
-        // Vercel preview/production frontends (*.vercel.app)
-        if (process.env.NODE_ENV === "production" && /\.vercel\.app$/i.test(origin)) {
-            return callback(null, true);
-        }
-
+        // Security: removed the *.vercel.app wildcard that previously allowed
+        // any Vercel deployment to call this API. Set CLIENT_URL env var instead.
         const msg = "CORS blocked for origin: " + origin;
         return callback(new Error(msg), false);
     },
@@ -81,7 +96,7 @@ const requireDatabase = async (req, res, next) => {
 };
 
 // Warm connection locally; serverless connects on first request via requireDatabase
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test") {
     connectDB().catch(() => {
         setTimeout(() => connectDB().catch(() => {}), 5000);
     });
@@ -114,8 +129,8 @@ app.get("/", (req, res) => {
 // Centralized Error-Handling Middleware (Must be registered last!)
 app.use(errorHandler);
 
-// Run the local development server if not running on serverless environments like Vercel
-if (process.env.NODE_ENV !== 'production') {
+// Run the local development server if not running on serverless environments like Vercel or test runner
+if (process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test") {
     const PORT = process.env.PORT || 8000;
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }

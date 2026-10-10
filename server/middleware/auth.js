@@ -1,6 +1,20 @@
 const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = process.env.JWT_SECRET || "state-stories-dev-secret-change-me";
+const INSECURE_DEFAULT = "state-stories-dev-secret-change-me";
+
+// Fail-fast: if JWT_SECRET is missing or is the insecure default in production,
+// crash loudly at startup rather than silently signing tokens anyone can forge.
+// In development the fallback is acceptable for local testing only.
+if (process.env.NODE_ENV === "production") {
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET === INSECURE_DEFAULT) {
+        throw new Error(
+            "FATAL: JWT_SECRET environment variable is not set or uses the insecure default. " +
+            "Set a strong random secret in your production environment before deploying."
+        );
+    }
+}
+
+const JWT_SECRET = process.env.JWT_SECRET || INSECURE_DEFAULT;
 
 /**
  * Middleware: Verifies JWT token from Authorization header.

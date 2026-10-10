@@ -167,6 +167,25 @@ Full checklist: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ---
 
+## 📚 Complete Engineering & Architecture Guides
+
+Explore in-depth technical documentation in the [`docs/`](docs/) directory:
+
+| Guide | Description |
+|---|---|
+| [**Start-to-End Master Guide**](docs/START_TO_END_PROJECT_GUIDE.md) | **Beginner-friendly, complete full-stack walkthrough from frontend to backend & database** |
+| [**System Architecture**](docs/ARCHITECTURE.md) | Request lifecycle, Vercel serverless integration, connection caching, design patterns |
+| [**Authentication & Security**](docs/AUTHENTICATION.md) | JWT lifecycle, bcrypt password hashing, session persistence, XSS vs CSRF trade-offs |
+| [**Database & Indexes**](docs/DATABASE_AND_INDEXES.md) | Mongoose schemas, compound indexes, `$text` search, idempotent bulk seeding |
+| [**REST API Reference**](docs/API_REFERENCE.md) | Comprehensive endpoint catalog, query parameters, status codes, payload examples |
+| [**Security Audit & Hardening**](docs/SECURITY_AUDIT.md) | Vulnerability analysis, rate limiting, CORS allowlisting, ReDoS & XSS defenses |
+| [**Frontend Architecture**](docs/FRONTEND_EXPLAINED.md) | React 18 component tree, `useDebounce`, `AbortController` cancellation, theme tokens |
+| [**Deployment Guide**](docs/DEPLOYMENT.md) | Step-by-step Vercel frontend/serverless & MongoDB Atlas production deployment |
+| [**Testing Strategy**](docs/TESTING_STRATEGY.md) | Testing pyramid, Jest, Supertest integration test suite, RTL hook testing |
+| [**Technical Interview Q&A**](docs/INTERVIEW_QA.md) | In-depth answers to senior engineering interview questions covering the entire stack |
+
+---
+
 ## Push updates to GitHub
 
 ```bash

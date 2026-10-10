@@ -18,6 +18,11 @@ async function connectDB() {
     return cached.conn;
   }
 
+  if (isDbConnected()) {
+    cached.conn = mongoose;
+    return cached.conn;
+  }
+
   if (!cached.promise) {
     cached.promise = mongoose
       .connect(uri, {
