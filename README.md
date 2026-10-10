@@ -54,12 +54,12 @@ MERN-Blog/
 │   ├── models/
 │   ├── routes/
 │   ├── services/
+│   ├── tests/                 # Automated API integration tests (Jest + Supertest)
 │   ├── seed.js                # Seed articles into Atlas
 │   ├── server.js
 │   ├── vercel.json
 │   └── .env.example
-├── docs/
-│   └── DEPLOYMENT.md          # Vercel + env checklist
+├── jest.config.js             # Test runner configuration
 ├── package.json               # Backend deps + dev scripts
 └── .gitignore
 ```
@@ -162,27 +162,6 @@ Use **two Vercel projects** linked to the same GitHub repo.
 | `REACT_APP_API_URL` | `https://your-api.vercel.app/api` |
 
 Redeploy the frontend after changing `REACT_APP_API_URL` (baked in at build time).
-
-Full checklist: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
-
----
-
-## 📚 Complete Engineering & Architecture Guides
-
-Explore in-depth technical documentation in the [`docs/`](docs/) directory:
-
-| Guide | Description |
-|---|---|
-| [**Start-to-End Master Guide**](docs/START_TO_END_PROJECT_GUIDE.md) | **Beginner-friendly, complete full-stack walkthrough from frontend to backend & database** |
-| [**System Architecture**](docs/ARCHITECTURE.md) | Request lifecycle, Vercel serverless integration, connection caching, design patterns |
-| [**Authentication & Security**](docs/AUTHENTICATION.md) | JWT lifecycle, bcrypt password hashing, session persistence, XSS vs CSRF trade-offs |
-| [**Database & Indexes**](docs/DATABASE_AND_INDEXES.md) | Mongoose schemas, compound indexes, `$text` search, idempotent bulk seeding |
-| [**REST API Reference**](docs/API_REFERENCE.md) | Comprehensive endpoint catalog, query parameters, status codes, payload examples |
-| [**Security Audit & Hardening**](docs/SECURITY_AUDIT.md) | Vulnerability analysis, rate limiting, CORS allowlisting, ReDoS & XSS defenses |
-| [**Frontend Architecture**](docs/FRONTEND_EXPLAINED.md) | React 18 component tree, `useDebounce`, `AbortController` cancellation, theme tokens |
-| [**Deployment Guide**](docs/DEPLOYMENT.md) | Step-by-step Vercel frontend/serverless & MongoDB Atlas production deployment |
-| [**Testing Strategy**](docs/TESTING_STRATEGY.md) | Testing pyramid, Jest, Supertest integration test suite, RTL hook testing |
-| [**Technical Interview Q&A**](docs/INTERVIEW_QA.md) | In-depth answers to senior engineering interview questions covering the entire stack |
 
 ---
 
