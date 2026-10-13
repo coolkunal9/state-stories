@@ -33,10 +33,10 @@ const errorHandler = (err, req, res, _next) => {
         });
     }
 
-    // Default: Internal server error
+    // Status code: respect custom statusCode or default to 500
     const statusCode = err.statusCode || 500;
     const message =
-        process.env.NODE_ENV === "production"
+        statusCode >= 500 && process.env.NODE_ENV === "production"
             ? "Internal server error"
             : err.message;
 
