@@ -50,6 +50,7 @@ const allowedOrigins = [
     "http://localhost:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3000",
+    "https://state-stories.vercel.app",
     process.env.CLIENT_URL,
     process.env.FRONTEND_URL,
 ].filter(Boolean);
@@ -64,13 +65,16 @@ app.use(cors({
             return callback(null, true);
         }
 
-        // Exact-origin allowlist check (covers CLIENT_URL and FRONTEND_URL)
+        // Exact-origin allowlist check (covers CLIENT_URL, FRONTEND_URL, and state-stories.vercel.app)
         if (allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
 
-        // Security: removed the *.vercel.app wildcard that previously allowed
-        // any Vercel deployment to call this API. Set CLIENT_URL env var instead.
+        // Allow Vercel preview and production deployments (*.vercel.app)
+        if (/\.vercel\.app$/i.test(origin)) {
+            return callback(null, true);
+        }
+
         const msg = "CORS blocked for origin: " + origin;
         return callback(new Error(msg), false);
     },

@@ -63,10 +63,17 @@ export const AuthProvider = ({ children }) => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, email, password }),
             });
-            const data = await response.json();
+
+            let data = {};
+            const contentType = response.headers.get("content-type") || "";
+            if (contentType.includes("application/json")) {
+                data = await response.json();
+            }
 
             if (!response.ok) {
-                const errorMsg = data.errors ? data.errors.join(", ") : (data.message || "Failed to register account.");
+                const errorMsg = data.errors
+                    ? data.errors.join(", ")
+                    : (data.message || `Registration failed (Status ${response.status})`);
                 throw new Error(errorMsg);
             }
 
@@ -75,8 +82,11 @@ export const AuthProvider = ({ children }) => {
             setUser(data.user);
             return data.user;
         } catch (err) {
-            setError(err.message);
-            throw err;
+            const message = err.name === "TypeError" && err.message.includes("fetch")
+                ? "Cannot reach the server. Please ensure the backend is running."
+                : err.message;
+            setError(message);
+            throw new Error(message);
         } finally {
             setLoading(false);
         }
@@ -94,10 +104,17 @@ export const AuthProvider = ({ children }) => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
             });
-            const data = await response.json();
+
+            let data = {};
+            const contentType = response.headers.get("content-type") || "";
+            if (contentType.includes("application/json")) {
+                data = await response.json();
+            }
 
             if (!response.ok) {
-                const errorMsg = data.errors ? data.errors.join(", ") : (data.message || "Failed to log in.");
+                const errorMsg = data.errors
+                    ? data.errors.join(", ")
+                    : (data.message || `Login failed (Status ${response.status})`);
                 throw new Error(errorMsg);
             }
 
@@ -106,8 +123,11 @@ export const AuthProvider = ({ children }) => {
             setUser(data.user);
             return data.user;
         } catch (err) {
-            setError(err.message);
-            throw err;
+            const message = err.name === "TypeError" && err.message.includes("fetch")
+                ? "Cannot reach the server. Please ensure the backend is running."
+                : err.message;
+            setError(message);
+            throw new Error(message);
         } finally {
             setLoading(false);
         }

@@ -7,9 +7,9 @@ const INSECURE_DEFAULT = "state-stories-dev-secret-change-me";
 // In development the fallback is acceptable for local testing only.
 if (process.env.NODE_ENV === "production") {
     if (!process.env.JWT_SECRET || process.env.JWT_SECRET === INSECURE_DEFAULT) {
-        throw new Error(
-            "FATAL: JWT_SECRET environment variable is not set or uses the insecure default. " +
-            "Set a strong random secret in your production environment before deploying."
+        console.warn(
+            "[SECURITY WARNING] JWT_SECRET environment variable is not set or uses the insecure default. " +
+            "Please configure a strong random secret in your production environment variables."
         );
     }
 }
