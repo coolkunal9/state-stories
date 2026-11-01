@@ -51,6 +51,17 @@ describe("Comments API (/api/articles/:name/comments & /api/auth/my-comments)", 
       expect(res.body.comment.username).toBe("gurpreet");
     });
 
+    it("should preserve angle brackets as comment text", async () => {
+      const text = "<strong>Travel tip</strong>";
+      const res = await request(app)
+        .post("/api/articles/punjab/comments")
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ text });
+
+      expect(res.statusCode).toBe(201);
+      expect(res.body.comment.text).toBe(text);
+    });
+
     it("should reject unauthenticated comment attempts with 401", async () => {
       const res = await request(app)
         .post("/api/articles/punjab/comments")

@@ -182,9 +182,9 @@ const seed = async () => {
         console.log("\nDone! Restart your server if it is running.");
     } catch (err) {
         console.error("Seed error:", err.message);
+        process.exitCode = 1;
     } finally {
         await mongoose.disconnect();
-        process.exit(0);
     }
 };
 

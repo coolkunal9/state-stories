@@ -5,6 +5,13 @@ import { MapPin, Clock, ArrowRight } from "lucide-react";
 import { getReadTime, excerptFromContent } from "../../utils/readTime";
 
 export default function ArticleCard({ article, index = 0 }) {
+  const handleImageError = (event) => {
+    const image = event.currentTarget;
+    if (image.dataset.fallbackApplied) return;
+    image.dataset.fallbackApplied = "true";
+    image.src = "/images/home1.jpg";
+  };
+
   return (
     <motion.article
       layout
@@ -22,6 +29,7 @@ export default function ArticleCard({ article, index = 0 }) {
           alt={article.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
+          onError={handleImageError}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-primary/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <span className="absolute top-5 left-5 bg-white/95 dark:bg-primary/90 backdrop-blur-sm text-primary dark:text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full">

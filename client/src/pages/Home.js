@@ -5,7 +5,6 @@ import {
   ArrowRight,
   Compass,
   TrendingUp,
-  Mail,
   ShieldCheck,
   Zap,
 } from "lucide-react";
@@ -27,31 +26,35 @@ const itemVariants = {
 const Home = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
+  const [articlesError, setArticlesError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     document.title = "States | Discover Incredible India";
+    const controller = new AbortController();
+
     const fetchArticles = async () => {
+      setLoading(true);
+      setArticlesError(null);
       try {
-        const data = await api.get("/articles");
+        const data = await api.get("/articles", { signal: controller.signal });
         setArticles(data.articles || data);
       } catch (err) {
-        console.error("Failed to load articles", err);
+        if (err.name !== "AbortError") {
+          console.error("Failed to load articles", err);
+          setArticlesError(err.message || "The story collection could not be loaded.");
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
-    fetchArticles();
-  }, []);
 
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
-      setEmail("");
-    }
-  };
+    fetchArticles();
+
+    return () => controller.abort();
+  }, [retryCount]);
 
   return (
     <div className="bg-background dark:bg-primary transition-colors duration-300">
@@ -231,7 +234,17 @@ const Home = () => {
                     aria-hidden="true"
                   />
                 ))
-              : articles
+              : articlesError
+                ? (
+                  <div className="md:col-span-2 lg:col-span-3 rounded-3xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 p-8 text-center" role="alert">
+                    <p className="text-primary dark:text-white font-semibold">Stories could not be loaded.</p>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{articlesError}</p>
+                    <Button onClick={() => setRetryCount((count) => count + 1)} variant="outline" className="mt-5">
+                      Retry
+                    </Button>
+                  </div>
+                )
+                : articles
                   .filter((a) => a.name !== "maharashtra")
                   .slice(0, 3)
                   .map((article, idx) => (
@@ -299,54 +312,22 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Newsletter */}
+      {/* Continue exploring */}
       <section className="py-20 md:py-24">
         <div className="page-container max-w-3xl">
           <div className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-3xl md:rounded-4xl p-8 md:p-12 text-center shadow-card backdrop-blur-md transition-colors duration-300">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-accent/10 text-accent rounded-2xl mb-6">
-              <Mail size={28} aria-hidden="true" />
+              <Compass size={28} aria-hidden="true" />
             </div>
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary dark:text-white mb-4">
-              The weekly state story
+              Keep exploring
             </h2>
             <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-lg mx-auto text-sm md:text-base">
-              Join explorers receiving our best stories every Sunday.
+              Browse the full archive of state stories and find your next destination.
             </p>
-
-            {subscribed ? (
-              <motion.p
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-accent/10 text-accent font-medium p-5 rounded-2xl border border-accent/20 max-w-md mx-auto"
-                role="status"
-              >
-                Welcome aboard — check your inbox soon.
-              </motion.p>
-            ) : (
-              <form
-                onSubmit={handleSubscribe}
-                className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto"
-              >
-                <label htmlFor="newsletter-email" className="sr-only">
-                  Email address
-                </label>
-                <input
-                  id="newsletter-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="input-field flex-1 rounded-2xl"
-                  required
-                />
-                <Button type="submit" variant="primary" size="md" className="shrink-0 rounded-2xl">
-                  Join now
-                </Button>
-              </form>
-            )}
-            <p className="mt-6 text-gray-400 dark:text-gray-500 text-xs uppercase tracking-widest">
-              No spam — just stories.
-            </p>
+            <Button to="/articles-list" variant="primary" size="md">
+              Browse all states <ArrowRight size={16} aria-hidden="true" />
+            </Button>
           </div>
         </div>
       </section>

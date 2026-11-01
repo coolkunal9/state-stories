@@ -1,218 +1,126 @@
-#  States — Discover Incredible India
+# State Stories
 
-[🔗 Live Demo](https://state-stories.vercel.app) | [⚙️ Live API](https://state-stories-api.vercel.app/api/health)
+State Stories is a full-stack editorial application for discovering travel, culture, and heritage stories from Indian states. It brings the story archive, keyword search, reader comments, and account features into one responsive web experience.
 
-A full-stack MERN blog showcasing Indian states through curated travel stories, search, JWT authentication, and community comments. Built with React, Express, MongoDB, and Tailwind CSS, deployed on **Vercel** (separate frontend + API projects).
+**Live application:** [state-stories.vercel.app](https://state-stories.vercel.app/) · **API health:** [state-stories-api.vercel.app/api/health](https://state-stories-api.vercel.app/api/health) · **Source:** [github.com/coolkunal9/state-stories](https://github.com/coolkunal9/state-stories)
 
-**Live stack:** React 19 · Express 5 · MongoDB Atlas · Framer Motion · Tailwind CSS
+The application and health endpoint were reachable during the portfolio review. The health endpoint reported a connected database.
 
----
+![State Stories sign-in dialog](client/public/images/screenshot-signup.png)
+
+## Problem and project goals
+
+Travel information about a state is often spread across separate articles and tourism pages. This project provides a single editorial archive where readers can explore state stories, search the collection, and discuss an article. Official tourism links are included on article pages as a starting point for trip planning.
 
 ## Features
 
-- Editorial home page with bento grid and trending articles from the API
-- Article pages with rich content, travel tips, and share links
-- Search across titles, states, and content
-- User registration / login (JWT + bcrypt)
-- Authenticated comments on articles
-- Dark mode, responsive layout, accessible navigation
-- Rate limiting, Helmet, Joi validation, XSS-safe comments
+- Responsive home page, state archive, article pages, and about page
+- Server-side search across article title, state, and content
+- Paginated article API with optional search and state filtering
+- Reader registration and login, protected profile page, and comment history
+- Authenticated comments attached to an article and user
+- Dark mode, route-aware navigation, article sharing, and read-time estimates
+- Loading and error states on the archive and search pages
+- API validation, security headers, authentication rate limits, and centralized error responses
 
----
+## Technology
 
----
+| Area | Stack |
+|---|---|
+| Client | React 19, React Router 7, Tailwind CSS 3, Framer Motion, Lucide React |
+| API | Node.js, Express 5, Joi validation, bcryptjs, JSON Web Tokens |
+| Data | MongoDB Atlas or local MongoDB, Mongoose |
+| Testing | Jest, Supertest, MongoMemoryServer |
+| Hosting | Vercel client and API projects |
 
-## 📸 Application Preview
+## Authentication and API flow
 
-| 🏛️ Home Page (Bento Grid Layout) | 🔐 Interactive Signup (JWT Auth) |
-| --- | --- |
-| <img src="client/public/images/screenshot-home.png" width="100%" alt="States Home Page Preview"/> | <img src="client/public/images/screenshot-signup.png" width="100%" alt="Signup Page Preview"/> |
+1. The client sends registration and login details to `POST /api/auth/register` and `POST /api/auth/login`.
+2. Joi validates the request. The API hashes passwords with bcryptjs and signs a seven-day JWT.
+3. The browser stores the token in `localStorage`. The shared API helper sends it as a `Bearer` token for protected requests.
+4. On reload, the client checks the session through `GET /api/auth/me`. The profile and comment routes require a valid token.
+5. A reader posts a comment through `POST /api/articles/:name/comments`; the API associates it with the authenticated user and article.
 
----
+The JWT is stored in browser `localStorage`, so it is accessible to JavaScript running on the site. There is no refresh-token or server-side session-revocation flow. These are useful follow-up improvements for a production authentication system.
 
+### API routes
 
-## Project structure
+| Method | Route | Purpose |
+|---|---|---|
+| `GET` | `/api/health` | Report API and database status |
+| `GET` | `/api/articles?page=1&limit=12` | List articles with pagination |
+| `GET` | `/api/articles?search=kerala` | Search titles, states, and content |
+| `GET` | `/api/articles/:slug` | Read one article and its comments |
+| `POST` | `/api/articles/:slug/comments` | Add a comment (JWT required) |
+| `POST` | `/api/auth/register` | Create an account |
+| `POST` | `/api/auth/login` | Authenticate an account |
+| `GET` | `/api/auth/me` | Read the current profile (JWT required) |
+| `GET` | `/api/auth/my-comments` | Read the current user's comments (JWT required) |
+
+## Architecture
 
 ```text
-MERN-Blog/
-├── client/                    # React frontend (Vercel root: client)
-│   ├── public/
-│   │   └── images/            # Static images (required for deploy)
-│   ├── src/
-│   │   ├── components/        # Navbar, Footer, AuthModal, UI kit
-│   │   ├── components/ui/     # Button, ArticleCard, Spinner, etc.
-│   │   ├── config/            # API_BASE_URL
-│   │   ├── context/           # AuthContext
-│   │   ├── pages/             # Home, Article, ArticlesList, …
-│   │   ├── services/          # api.js fetch client
-│   │   └── utils/             # readTime, excerpts
-│   ├── vercel.json            # SPA rewrites
-│   └── package.json
-├── server/                    # Express API (Vercel root: server)
-│   ├── db.js                  # MongoDB cache for serverless
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── services/
-│   ├── tests/                 # Automated API integration tests (Jest + Supertest)
-│   ├── seed.js                # Seed articles into Atlas
-│   ├── server.js
-│   ├── vercel.json
-│   └── .env.example
-├── jest.config.js             # Test runner configuration
-├── package.json               # Backend deps + dev scripts
-└── .gitignore
+client/                  React single-page application
+├── src/components/      Navigation, auth, comments, and shared UI
+├── src/context/         Authentication state and actions
+├── src/pages/           Home, archive, search, article, profile, about
+├── src/services/api.js  Fetch wrapper and bearer-token header
+└── vercel.json          SPA route fallback
+
+server/                  Express API and serverless entry point
+├── middleware/          JWT auth, Joi validation, error handling
+├── models/              User, Article, and Comment schemas
+├── routes/              Auth and article HTTP routes
+├── services/            Authentication and article data operations
+├── tests/               Jest + Supertest API integration tests
+├── db.js                Cached Mongoose connection
+└── vercel.json          Serverless API routing
 ```
 
----
+The client and API are separate Vercel projects rooted at `client/` and `server/`. The server reuses its Mongoose connection between serverless invocations. During local development, the client calls the API at `http://localhost:8000/api`.
 
-## Prerequisites
+## Run locally
 
-- **Node.js** 18+
-- **MongoDB Atlas** (or local MongoDB for development)
-- **Git** + **GitHub** account
-- **Vercel** account (two projects: API + frontend)
-
----
-
-## Local development
-
-### 1. Clone and install
+Requirements: Node.js 20.19 or newer, npm, and a local MongoDB instance or MongoDB Atlas database. Mongoose 9, used by the API, requires Node.js 20.19 or newer.
 
 ```bash
 git clone https://github.com/coolkunal9/state-stories.git
-cd MERN-Blog
-
+cd state-stories
 npm install
-cd client && npm install && cd ..
+npm install --prefix client
+cp server/.env.example server/.env
+cp client/.env.example client/.env
 ```
 
-### 2. Environment variables
+Set `MONGO_URI` and a private `JWT_SECRET` in `server/.env`. Keep the client API URL as `http://localhost:8000/api` in `client/.env` for local development. Do not commit either `.env` file.
 
-**Server** — copy `server/.env.example` to `server/.env`:
-
-```env
-MONGO_URI=your_mongodb_connection_string
-PORT=8000
-NODE_ENV=development
-JWT_SECRET=your_long_random_secret
-CLIENT_URL=http://localhost:3000
-```
-
-**Client** — copy `client/.env.example` to `client/.env`:
-
-```env
-REACT_APP_API_URL=http://localhost:8000/api
-```
-
-### 3. Seed the database (first time)
+To seed the configured database and start both applications:
 
 ```bash
 npm run seed
-```
-
-### 4. Run
-
-**Option A — both at once (from repo root):**
-
-```bash
 npm run dev
 ```
 
-**Option B — two terminals:**
+The client runs at `http://localhost:3000`; the API runs at `http://localhost:8000`. The seed command upserts the sample articles in the database configured by `server/.env`; use only a development database.
+
+Other useful commands from the repository root:
 
 ```bash
-# Terminal 1
-npm start
-
-# Terminal 2
-cd client && npm start
+npm start                 # Start API
+npm run client            # Start client
+npm test                  # Run API integration tests
 ```
 
-- Frontend: http://localhost:3000  
-- API: http://localhost:8000  
-- Health: http://localhost:8000/api/health  
+The client also supports `npm run build --prefix client` to create its production build.
 
----
+## Known gaps and follow-up work
 
-## Deploy on Vercel
-
-Use **two Vercel projects** linked to the same GitHub repo.
-
-| Project | Root directory | Build command | Output |
-|---------|----------------|---------------|--------|
-| **API** | `server` | — | Serverless (`server.js`) |
-| **Frontend** | `client` | `npm run build` | `build` |
-
-### API environment variables
-
-| Variable | Description |
-|----------|-------------|
-| `MONGO_URI` | MongoDB Atlas connection string |
-| `JWT_SECRET` | Strong secret for production |
-| `NODE_ENV` | `production` |
-| `CLIENT_URL` | `https://your-frontend.vercel.app` (no trailing slash) |
-
-**Atlas:** Network Access → allow `0.0.0.0/0` for Vercel.
-
-### Frontend environment variables
-
-| Variable | Description |
-|----------|-------------|
-| `REACT_APP_API_URL` | `https://your-api.vercel.app/api` |
-
-Redeploy the frontend after changing `REACT_APP_API_URL` (baked in at build time).
-
----
-
-## Push updates to GitHub
-
-```bash
-cd MERN-Blog
-git status
-git add .
-git commit -m "Update: premium UI, API fixes, README and deploy prep"
-git push origin main
-```
-
-Vercel redeploys automatically when connected to your branch.
-
-**Never commit:** `server/.env`, `client/.env`, `node_modules/`, `client/build/`
-
----
-
-## API overview
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/health` | Health + DB status |
-| GET | `/api/articles` | List articles |
-| GET | `/api/articles/:name` | Single article + comments |
-| POST | `/api/articles/:name/comments` | Add comment |
-| POST | `/api/auth/register` | Register |
-| POST | `/api/auth/login` | Login |
-
----
-
-## Scripts (repo root)
-
-| Command | Description |
-|---------|-------------|
-| `npm start` | Start API on port 8000 |
-| `npm run server` | API with nodemon |
-| `npm run client` | Start React dev server |
-| `npm run dev` | API + React together |
-| `npm run seed` | Seed articles to MongoDB |
-
----
-
-## Author
-
-**Kunal Prasad** — Full-stack developer  
-[GitHub](https://github.com/coolKunal9) · [LinkedIn](https://www.linkedin.com/in/kunal-prasad-7676392bb/)
-
----
+- The public application is an editorial demo; there is no content-management interface or working newsletter subscription.
+- Some seeded articles refer to image files that are not present in `client/public/images/`. The client now shows a fallback image for those cards and article headers.
+- `localStorage` token storage and per-instance rate limits are trade-offs; production use would benefit from a reviewed session design and shared rate-limit storage.
+- The CORS middleware accepts Vercel preview origins by suffix. Confirm the intended preview policy and tighten it if only specific projects should call the API.
+- The auth and search dialogs could use a full keyboard and screen-reader audit, including focus trapping and focus restoration.
 
 ## License
 
-ISC
+ISC. See `package.json`.
