@@ -19,6 +19,7 @@ import CommentsList from "../components/CommentsList";
 import AddCommentForm from "../components/AddCommentForm";
 import NotFound from "./NotFound";
 import Spinner from "../components/ui/Spinner";
+import Button from "../components/ui/Button";
 import api from "../services/api";
 import { getReadTime } from "../utils/readTime";
 
@@ -26,29 +27,54 @@ const Article = () => {
   const { name } = useParams();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [img2Error, setImg2Error] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchArticle = async () => {
       setLoading(true);
+      setArticle(null);
+      setLoadError(null);
+      setImg2Error(false);
       try {
-        const data = await api.get(`/articles/${name}`);
+        const data = await api.get(`/articles/${name}`, { signal: controller.signal });
         setArticle(data);
         document.title = `${data.title} | States`;
-      } catch {
-        setArticle(null);
+      } catch (err) {
+        if (err.name !== "AbortError" && err.status !== 404) {
+          setLoadError(err.message || "The story could not be loaded.");
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
+
     fetchArticle();
     window.scrollTo(0, 0);
-  }, [name]);
+
+    return () => controller.abort();
+  }, [name, retryCount]);
 
   if (loading) {
     return (
       <div className="pt-20">
         <Spinner label="Unfolding story..." />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="page-container min-h-[60vh] flex flex-col items-center justify-center gap-5 py-28 text-center">
+        <p className="text-gray-600 dark:text-gray-300" role="alert">{loadError}</p>
+        <Button onClick={() => setRetryCount((count) => count + 1)} variant="primary">
+          Retry loading story
+        </Button>
       </div>
     );
   }
@@ -98,6 +124,12 @@ const Article = () => {
             src={article.image}
             alt={article.title || "Story header image"}
             className="w-full h-full object-cover opacity-65"
+            onError={(event) => {
+              const image = event.currentTarget;
+              if (image.dataset.fallbackApplied) return;
+              image.dataset.fallbackApplied = "true";
+              image.src = "/images/home1.jpg";
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/50 to-primary/20" />
         </div>
@@ -189,21 +221,21 @@ const Article = () => {
           <section className="mt-12">
             <h3 className="font-heading text-xl font-bold text-primary dark:text-white mb-6 flex items-center gap-2">
               <Globe className="text-secondary" size={24} aria-hidden="true" />
-              Local updates
+              Planning resources
             </h3>
             <div className="grid md:grid-cols-2 gap-5">
               <div className="p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-card transition-shadow">
-                <span className="badge bg-accent/10 text-accent mb-3">Heritage</span>
-                <h4 className="font-semibold text-primary dark:text-white mb-2">Night tours launched</h4>
+                <span className="badge bg-accent/10 text-accent mb-3">Hours & access</span>
+                <h4 className="font-semibold text-primary dark:text-white mb-2">Confirm opening details</h4>
                 <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                  Official evening tours now cover major landmarks under the moonlight.
+                  Check current opening hours, permits, and tour availability with official local sources before you travel.
                 </p>
               </div>
               <div className="p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-card transition-shadow">
-                <span className="badge bg-secondary/10 text-secondary mb-3">Transit</span>
-                <h4 className="font-semibold text-primary dark:text-white mb-2">New eco-bus routes</h4>
+                <span className="badge bg-secondary/10 text-secondary mb-3">Getting around</span>
+                <h4 className="font-semibold text-primary dark:text-white mb-2">Review local transport</h4>
                 <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                  Sustainable lines connect airports to central tourist districts.
+                  Check current transit options and local travel guidance when planning your route.
                 </p>
               </div>
             </div>

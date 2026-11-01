@@ -64,35 +64,17 @@ const getArticleByName = async (name) => {
 };
 
 /**
- * Basic helper to sanitize string input by escaping HTML tags (XSS protection)
- */
-const escapeHTML = (str) => {
-    if (typeof str !== "string") return str;
-    return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#x27;")
-        .replace(/\//g, "&#x2F;");
-};
-
-/**
  * Add a comment to an article (stored in the separate Comment collection).
  */
 const addComment = async (articleName, { userId, username, text }) => {
     const article = await Article.findOne({ name: articleName });
     if (!article) return null;
 
-    // Sanitize user inputs to prevent Stored XSS attacks
-    const sanitizedUsername = escapeHTML(username);
-    const sanitizedText = escapeHTML(text);
-
     const comment = await Comment.create({
         article: article._id,
         user: userId,
-        username: sanitizedUsername,
-        text: sanitizedText,
+        username,
+        text,
     });
 
     return comment;
